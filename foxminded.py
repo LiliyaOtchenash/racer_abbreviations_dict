@@ -1,22 +1,29 @@
+from __future__ import annotations
+
 import re
 import datetime
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, defaultdict
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Type, DefaultDict
+
+NameTeamNamedTuple: Type[NameTeamNamedTuple] = namedtuple(
+    'NameTeamNamedTuple', ['name', 'team'])
 
 
-def create_racer_abbreviations_dict(file_name) -> Dict[str, tuple[str, str]]:
+def create_racer_abbreviations_dict(file_name) -> \
+        DefaultDict[str, NameTeamNamedTuple]:
     """
     Retrieves {'abbreviation': (name, team)}
     format dict from abbreviations.txt
     """
-    abbreviations = {}
+    abbreviations: DefaultDict[str, NameTeamNamedTuple] = \
+        defaultdict(NameTeamNamedTuple)
     with open(file_name, 'r') as file:
         for line in file:
             match_obj = re.match(r'^(\w+)_([a-zA-Z\s]+)_([a-zA-Z\s]+)$', line)
-            abbreviations[match_obj.group(1)] = (
-                match_obj.group(2),
-                match_obj.group(3).rstrip()
+            abbreviations[match_obj.group(1)] = NameTeamNamedTuple(
+                name=match_obj.group(2),
+                team=match_obj.group(3).rstrip()
             )
     return abbreviations
 
@@ -40,7 +47,7 @@ def retrieve_timings_from_log(file_name) -> Dict[str, datetime]:
 
 
 def sorted_individual_results(start_timings: Dict[str, datetime],
-                              end_timings: Dict[str, datetime])\
+                              end_timings: Dict[str, datetime]) \
         -> Dict[str, int]:
     """
     creating dict with best lap results
@@ -59,19 +66,19 @@ def sorted_individual_results(start_timings: Dict[str, datetime],
 
 
 def print_result_board(sorted_lap_results: Dict[str, int],
-                       abbreviations: Dict[str, tuple[str, str]]):
+                       abbreviations: DefaultDict[str, NameTeamNamedTuple]):
     """
     prints result board to a console
     """
     counter = 1
     for abbreviation, time in sorted_lap_results.items():
-        racer_name = abbreviations[abbreviation][0]
-        team_name = abbreviations[abbreviation][1]
+        racer_name = abbreviations[abbreviation].name
+        team_name = abbreviations[abbreviation].team
         print(("{: <3} {: <18} | {: <30}  | {}".format(
             str(counter) + '.', racer_name, team_name, str(time)))
         )
         if counter == 15:
-            print('-'*70)
+            print('-' * 70)
         counter += 1
 
 
